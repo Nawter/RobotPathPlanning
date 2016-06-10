@@ -1,0 +1,253 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>generaGrafoObstaculos</title><meta name="generator" content="MATLAB 7.13"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2013-04-25"><meta name="DC.source" content="generaGrafoObstaculos.m"><style type="text/css">
+
+body {
+  background-color: white;
+  margin:10px;
+}
+
+h1 {
+  color: #990000; 
+  font-size: x-large;
+}
+
+h2 {
+  color: #990000;
+  font-size: medium;
+}
+
+/* Make the text shrink to fit narrow windows, but not stretch too far in 
+wide windows. */ 
+p,h1,h2,div.content div {
+  max-width: 600px;
+  /* Hack for IE6 */
+  width: auto !important; width: 600px;
+}
+
+pre.codeinput {
+  background: #EEEEEE;
+  padding: 10px;
+}
+@media print {
+  pre.codeinput {word-wrap:break-word; width:100%;}
+} 
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.codeoutput {
+  color: #666666;
+  padding: 10px;
+}
+
+pre.error {
+  color: red;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+  </style></head><body><div class="content"><pre class="codeinput"><span class="keyword">function</span> grafoVisibilidadTemporal=generaGrafoObstaculos(indiceObstaculos,espacioConfiguraciones,espacioConfiguracionesTam,grafoVisibilidadTemporal)
+obstaculoOrigen = espacioConfiguraciones{indiceObstaculos};
+longitudObstaculoOrigen = size(obstaculoOrigen,1);
+<span class="keyword">for</span> j = 1:longitudObstaculoOrigen -1
+verticeOrigen = obstaculoOrigen(j,:);
+    <span class="keyword">for</span> k = 1:espacioConfiguracionesTam -2
+                obstaculoDestino = espacioConfiguraciones{k};
+                longitudObstaculoDestino = size(obstaculoDestino,1);
+                <span class="comment">% Comprobar los vertices visibles en el mismo obstaculo. Es</span>
+                <span class="comment">% decir los vertices origen y destino estan el mismo obstaculo.</span>
+                <span class="keyword">if</span> indiceObstaculos == k
+                    <span class="keyword">for</span> l = 1:longitudObstaculoDestino -1
+                        verticeDestino = obstaculoDestino(l,:);
+                        <span class="comment">% Uno comprobar que el vertice origen no es igual al</span>
+                        <span class="comment">% vertice destino.</span>
+                        <span class="keyword">if</span> l~=j
+                            linea = [verticeOrigen(1) verticeOrigen(2); verticeDestino(1) verticeDestino(2)];
+                            <span class="comment">% Dos comprobar si el vertice destino es adyacente</span>
+                            <span class="comment">% al vertice origen en caso de serlo se calcula el</span>
+                            <span class="comment">% vector entre el vertice origen y el vertice</span>
+                            <span class="comment">% destino.</span>
+                            <span class="keyword">if</span> (l == mod(j+1,longitudObstaculoOrigen -1) || (l == (mod(j-1,longitudObstaculoOrigen -1) + (j==1)*(longitudObstaculoOrigen -1))))
+                               lineaFinal = [linea(2,:) linea(1,:)];
+                               <span class="keyword">if</span> not(existeVector(grafoVisibilidadTemporal,lineaFinal))
+                                    grafoVisibilidadTemporal = [grafoVisibilidadTemporal; [linea(1,:) linea(2,:)]];
+                               <span class="keyword">end</span>
+                            <span class="keyword">else</span>
+                             <span class="comment">% Tres si no es adyacente comprobar que la linea</span>
+                             <span class="comment">% entre los dos vertices del obstaculo tiene</span>
+                             <span class="comment">% contacto con el obstaculo. Despues comprobar la</span>
+                             <span class="comment">% visiblidad del vertice destino y por ultimo que</span>
+                             <span class="comment">% no se repite la linea dentro del grafo de</span>
+                             <span class="comment">% visibilidad generado.</span>
+                               [lineaCoordX,lineaCoordY] = polyxpoly(linea(:,1),linea(:,2),obstaculoDestino(:,1),obstaculoDestino(:,2),<span class="string">'unique'</span>);
+                               <span class="keyword">if</span> size(lineaCoordX,1) &gt;= 2
+                                    puntosCoordX = linspace(linea(1,1),linea(2,1));
+                                    puntosCoordY = linspace(linea(1,2),linea(2,2));
+                                    matrizPuntosDentro = inpolygon(puntosCoordX,puntosCoordY,obstaculoDestino(:,1),obstaculoDestino(:,2));
+                                    <span class="keyword">if</span> sum(matrizPuntosDentro) &lt;= 2
+                                        lineaFinal = [linea(2,:) linea(1,:)];
+                                        <span class="keyword">if</span> not(existeVector(grafoVisibilidadTemporal,lineaFinal))
+                                            grafoVisibilidadTemporal = [grafoVisibilidadTemporal; [linea(1,:) linea(2,:)]];
+                                        <span class="keyword">end</span>
+                                    <span class="keyword">end</span>
+                               <span class="keyword">end</span>
+                            <span class="keyword">end</span>
+                        <span class="keyword">end</span>
+                    <span class="keyword">end</span>
+                <span class="comment">% Comprobacion de vertices visibles en los demas obstaculos. Es</span>
+                <span class="comment">% decir el vertice origen y el vertice destino estan en</span>
+                <span class="comment">% distintos obstaculos.</span>
+                <span class="keyword">else</span>
+                    <span class="keyword">for</span> l = 1:longitudObstaculoDestino -1
+                        verticeDestino = obstaculoDestino(l,:);
+                        <span class="comment">% Uno generar un linea entre el vertice origen y el vertice</span>
+                        <span class="comment">% destino.</span>
+                        linea = [verticeOrigen(1) verticeOrigen(2); verticeDestino(1) verticeDestino(2)];
+                        <span class="comment">% Dos comprobar que la linea tiene un punto de interesccion</span>
+                        <span class="comment">% con el obstaculo origen y que es diagonal.</span>
+                        [lineaCoordX,lineaCoordY] = polyxpoly(linea(:,1),linea(:,2),obstaculoOrigen(:,1),obstaculoOrigen(:,2),<span class="string">'unique'</span>);
+                        <span class="keyword">if</span> size(lineaCoordX,1) == 1
+                            puntosCoordX = linspace(linea(1,1),linea(2,1));
+                            puntosCoordY = linspace(linea(1,2),linea(2,2));
+                            <span class="comment">% Tres comprobar la visibilidad del vertice</span>
+                            <span class="comment">% origen.(no hay mas vertices en el camino).</span>
+                            matrizPuntosDentro = inpolygon(puntosCoordX,puntosCoordY,obstaculoOrigen(:,1),obstaculoOrigen(:,2));
+                            <span class="keyword">if</span> sum(matrizPuntosDentro) &lt;= 2
+                                <span class="comment">% Cuatro comprobar que la linea tiene un punto de interesccion</span>
+                                <span class="comment">% con el obstaculo destino y que es diagonal.</span>
+                                [lineaCoordXDos,lineaCoordYDos] = polyxpoly(linea(:,1),linea(:,2),obstaculoDestino(:,1),obstaculoDestino(:,2),<span class="string">'unique'</span>);
+                                <span class="keyword">if</span> size(lineaCoordXDos,1) == 1
+                                    <span class="comment">% Cinco comprobar la visibilidad del</span>
+                                    <span class="comment">% vertice destino.</span>
+                                    matrizPuntosDentroDos = inpolygon(puntosCoordX,puntosCoordY,obstaculoDestino(:,1),obstaculoDestino(:,2));
+                                    <span class="keyword">if</span> sum(matrizPuntosDentroDos) &lt;= 2
+                                        lineaFinal = [linea(2,:) linea(1,:)];
+                                        <span class="comment">% Seis comprobar que no se repite la</span>
+                                        <span class="comment">% linea dentro del grafo de visibilidad</span>
+                                        <span class="comment">% generado.</span>
+                                        <span class="keyword">if</span> not(existeVector(grafoVisibilidadTemporal,lineaFinal))
+                                            grafoVisibilidadTemporal = [grafoVisibilidadTemporal; [linea(1,:) linea(2,:)]];
+                                        <span class="keyword">end</span>
+                                    <span class="keyword">end</span>
+                                <span class="keyword">end</span>
+                            <span class="keyword">end</span>
+                        <span class="keyword">end</span>
+                    <span class="keyword">end</span>
+                <span class="keyword">end</span>
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">Error using generaGrafoObstaculos (line 2)
+Not enough input arguments.
+</pre><p class="footer"><br>
+      Published with MATLAB&reg; 7.13<br></p></div><!--
+##### SOURCE BEGIN #####
+function grafoVisibilidadTemporal=generaGrafoObstaculos(indiceObstaculos,espacioConfiguraciones,espacioConfiguracionesTam,grafoVisibilidadTemporal)  
+obstaculoOrigen = espacioConfiguraciones{indiceObstaculos};
+longitudObstaculoOrigen = size(obstaculoOrigen,1);
+for j = 1:longitudObstaculoOrigen -1   
+verticeOrigen = obstaculoOrigen(j,:);
+    for k = 1:espacioConfiguracionesTam -2
+                obstaculoDestino = espacioConfiguraciones{k};           
+                longitudObstaculoDestino = size(obstaculoDestino,1);               
+                % Comprobar los vertices visibles en el mismo obstaculo. Es
+                % decir los vertices origen y destino estan el mismo obstaculo.
+                if indiceObstaculos == k
+                    for l = 1:longitudObstaculoDestino -1
+                        verticeDestino = obstaculoDestino(l,:);
+                        % Uno comprobar que el vertice origen no es igual al 
+                        % vertice destino. 
+                        if l~=j                                           
+                            linea = [verticeOrigen(1) verticeOrigen(2); verticeDestino(1) verticeDestino(2)];
+                            % Dos comprobar si el vertice destino es adyacente
+                            % al vertice origen en caso de serlo se calcula el 
+                            % vector entre el vertice origen y el vertice 
+                            % destino.                        
+                            if (l == mod(j+1,longitudObstaculoOrigen -1) || (l == (mod(j-1,longitudObstaculoOrigen -1) + (j==1)*(longitudObstaculoOrigen -1))))               
+                               lineaFinal = [linea(2,:) linea(1,:)];                                                                           
+                               if not(existeVector(grafoVisibilidadTemporal,lineaFinal))
+                                    grafoVisibilidadTemporal = [grafoVisibilidadTemporal; [linea(1,:) linea(2,:)]];                               
+                               end                          
+                            else
+                             % Tres si no es adyacente comprobar que la linea 
+                             % entre los dos vertices del obstaculo tiene 
+                             % contacto con el obstaculo. Despues comprobar la 
+                             % visiblidad del vertice destino y por ultimo que
+                             % no se repite la linea dentro del grafo de
+                             % visibilidad generado.
+                               [lineaCoordX,lineaCoordY] = polyxpoly(linea(:,1),linea(:,2),obstaculoDestino(:,1),obstaculoDestino(:,2),'unique');
+                               if size(lineaCoordX,1) >= 2
+                                    puntosCoordX = linspace(linea(1,1),linea(2,1));
+                                    puntosCoordY = linspace(linea(1,2),linea(2,2));
+                                    matrizPuntosDentro = inpolygon(puntosCoordX,puntosCoordY,obstaculoDestino(:,1),obstaculoDestino(:,2));                                
+                                    if sum(matrizPuntosDentro) <= 2
+                                        lineaFinal = [linea(2,:) linea(1,:)];
+                                        if not(existeVector(grafoVisibilidadTemporal,lineaFinal))
+                                            grafoVisibilidadTemporal = [grafoVisibilidadTemporal; [linea(1,:) linea(2,:)]];                       
+                                        end                                    
+                                    end                               
+                               end                                                         
+                            end                        
+                        end                       
+                    end            
+                % Comprobacion de vertices visibles en los demas obstaculos. Es 
+                % decir el vertice origen y el vertice destino estan en 
+                % distintos obstaculos.                 
+                else 
+                    for l = 1:longitudObstaculoDestino -1
+                        verticeDestino = obstaculoDestino(l,:);
+                        % Uno generar un linea entre el vertice origen y el vertice
+                        % destino.
+                        linea = [verticeOrigen(1) verticeOrigen(2); verticeDestino(1) verticeDestino(2)];    
+                        % Dos comprobar que la linea tiene un punto de interesccion
+                        % con el obstaculo origen y que es diagonal.
+                        [lineaCoordX,lineaCoordY] = polyxpoly(linea(:,1),linea(:,2),obstaculoOrigen(:,1),obstaculoOrigen(:,2),'unique');                                        
+                        if size(lineaCoordX,1) == 1
+                            puntosCoordX = linspace(linea(1,1),linea(2,1));
+                            puntosCoordY = linspace(linea(1,2),linea(2,2));
+                            % Tres comprobar la visibilidad del vertice
+                            % origen.(no hay mas vertices en el camino).
+                            matrizPuntosDentro = inpolygon(puntosCoordX,puntosCoordY,obstaculoOrigen(:,1),obstaculoOrigen(:,2));                                                                       
+                            if sum(matrizPuntosDentro) <= 2
+                                % Cuatro comprobar que la linea tiene un punto de interesccion
+                                % con el obstaculo destino y que es diagonal.
+                                [lineaCoordXDos,lineaCoordYDos] = polyxpoly(linea(:,1),linea(:,2),obstaculoDestino(:,1),obstaculoDestino(:,2),'unique');                                                        
+                                if size(lineaCoordXDos,1) == 1
+                                    % Cinco comprobar la visibilidad del 
+                                    % vertice destino.
+                                    matrizPuntosDentroDos = inpolygon(puntosCoordX,puntosCoordY,obstaculoDestino(:,1),obstaculoDestino(:,2));                                                                                        
+                                    if sum(matrizPuntosDentroDos) <= 2
+                                        lineaFinal = [linea(2,:) linea(1,:)];                                   
+                                        % Seis comprobar que no se repite la
+                                        % linea dentro del grafo de visibilidad 
+                                        % generado.
+                                        if not(existeVector(grafoVisibilidadTemporal,lineaFinal))
+                                            grafoVisibilidadTemporal = [grafoVisibilidadTemporal; [linea(1,:) linea(2,:)]]; 
+                                        end                                                                       
+                                    end                                
+                                end                            
+                            end                        
+                        end                    
+                    end                                
+                end
+    end   
+end
+end
+##### SOURCE END #####
+--></body></html>

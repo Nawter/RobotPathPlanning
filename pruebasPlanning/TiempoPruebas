@@ -1,0 +1,13 @@
+1-conReducirGrafos 0.3100 segundos
+2-conReducirGrafos 1.2400 segundos
+3-conReducirGrafos 2.9500 segundos
+4-conReducirGrafos 5.1200 segundos
+5-conReducirGrafos 8.5700 segundos
+--------------
+6-sinReducirGrafos 10.8600 s
+6-conReducirGrafos 11.0900 s
+7-sinReducirGrafos 11.4900 s 
+7-conReducirGrafos 12.4700 s
+20-sinReducirGrafos  119.1400 s
+20-conReducirGrafos  118.9900 s
+--------------------------------------
